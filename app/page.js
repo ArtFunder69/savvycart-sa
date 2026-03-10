@@ -11,13 +11,12 @@ export default function Home() {
   const [basket, setBasket] = useState([]);
   const [page, setPage] = useState("home");
   const [loading, setLoading] = useState(true);
+  const [deals, setDeals] = useState([]);
 
-  // Load all products from database on startup
   useEffect(() => {
     loadProducts();
   }, []);
 
-  // Filter results when search query changes
   useEffect(() => {
     if (query.length > 1) {
       const filtered = products.filter(p =>
@@ -36,8 +35,39 @@ export default function Home() {
       .from('products')
       .select('*')
       .order('name');
-    if (!error) setProducts(data);
+    if (!error) {
+      setProducts(data);
+      await loadDeals(data);
+    }
     setLoading(false);
+  };
+
+  const loadDeals = async (productList) => {
+    const { data, error } = await supabase
+      .from('prices')
+      .select('*, retailers(*), products(*)')
+      .eq('in_stock', true)
+      .order('price');
+    if (!error && data) {
+      const seen = new Set();
+      const bestDeals = [];
+      for (const price of data) {
+        if (!seen.has(price.product_id)) {
+          seen.add(price.product_id);
+          const product = productList.find(p => p.id === price.product_id);
+          if (product) {
+            bestDeals.push({
+              product: product,
+              price: price.price,
+              retailer: price.retailers?.name,
+              delivery: price.delivery,
+            });
+          }
+        }
+        if (bestDeals.length >= 24) break;
+      }
+      setDeals(bestDeals);
+    }
   };
 
   const loadProductPrices = async (product) => {
@@ -49,17 +79,6 @@ export default function Home() {
     if (!error) setSelectedPrices(data);
     setSelected(product);
     setPage("product");
-  };
-
-  const getLowestPrice = async (productId) => {
-    const { data } = await supabase
-      .from('prices')
-      .select('price, retailers(name)')
-      .eq('product_id', productId)
-      .eq('in_stock', true)
-      .order('price')
-      .limit(1);
-    return data?.[0] || null;
   };
 
   const addToBasket = (product) => {
@@ -81,7 +100,7 @@ export default function Home() {
           🛒 SavvyCart <span style={{ color: "#22c55e" }}>SA</span>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          {[["home","Home"],["search","Search"],["basket","Basket"]].map(([p,l]) => (
+          {[["home","Home"],["search","Search"],["deals","🔥 Deals"],["basket","Basket"]].map(([p,l]) => (
             <button key={p} onClick={() => setPage(p)} style={{ padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer", background: page === p ? "#dcfce7" : "transparent", color: page === p ? "#15803d" : "#4b5563", fontWeight: 600 }}>
               {l} {p === "basket" && basket.length > 0 && `(${basket.length})`}
             </button>
@@ -108,6 +127,29 @@ export default function Home() {
             </div>
           </div>
 
+          {/* DEALS PREVIEW ON HOME */}
+          <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: "#14532d" }}>🔥 Today's Best Deals</h2>
+              <button onClick={() => setPage("deals")} style={{ padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", background: "#15803d", color: "white", fontWeight: 600 }}>See All →</button>
+            </div>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>⏳ Loading deals...</div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 16 }}>
+                {deals.slice(0, 4).map((deal, i) => (
+                  <div key={i} onClick={() => loadProductPrices(deal.product)} style={{ background: "white", borderRadius: 16, border: "2px solid #dcfce7", padding: 20, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                    <div style={{ fontSize: 40 }}>{deal.product.image}</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginTop: 8, lineHeight: 1.3 }}>{deal.product.name}</div>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: "#15803d", marginTop: 8 }}>R{deal.price}</div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>at {deal.retailer}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ALL PRODUCTS */}
           <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px" }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: "#14532d", marginBottom: 20 }}>🛒 All Products</h2>
             {loading ? (
@@ -186,10 +228,50 @@ export default function Home() {
         </div>
       )}
 
+      {/* DEALS PAGE */}
+      {page === "deals" && (
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+          <h2 style={{ fontSize: 26, fontWeight: 900, color: "#14532d", marginBottom: 8 }}>🔥 Today's Best Deals</h2>
+          <p style={{ color: "#6b7280", marginBottom: 24 }}>Lowest prices we've found across all retailers today</p>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 60, color: "#6b7280" }}>
+              <div style={{ fontSize: 48 }}>⏳</div>
+              <div style={{ marginTop: 12, fontSize: 18 }}>Loading deals...</div>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+              {deals.map((deal, i) => (
+                <div key={i} onClick={() => loadProductPrices(deal.product)} style={{ background: "white", borderRadius: 16, border: "2px solid #dcfce7", overflow: "hidden", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+                  <div style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)", padding: "20px", display: "flex", alignItems: "center", gap: 16 }}>
+                    <span style={{ fontSize: 48 }}>{deal.product.image}</span>
+                    <div>
+                      <div style={{ fontSize: 11, color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>{deal.product.category}</div>
+                      <div style={{ fontWeight: 700, fontSize: 15, marginTop: 2, lineHeight: 1.3 }}>{deal.product.name}</div>
+                    </div>
+                  </div>
+                  <div style={{ padding: "16px 20px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontSize: 28, fontWeight: 900, color: "#15803d" }}>R{deal.price}</div>
+                        <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>at {deal.retailer}</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <span style={{ background: "#dcfce7", color: "#15803d", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700 }}>BEST PRICE</span>
+                        <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 6 }}>{deal.delivery}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* PRODUCT PAGE */}
       {page === "product" && selected && (
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px" }}>
-          <button onClick={() => setPage("search")} style={{ background: "#f0fdf4", border: "none", cursor: "pointer", padding: "8px 16px", borderRadius: 8, marginBottom: 20, fontWeight: 600, color: "#374151" }}>← Back</button>
+          <button onClick={() => setPage("home")} style={{ background: "#f0fdf4", border: "none", cursor: "pointer", padding: "8px 16px", borderRadius: 8, marginBottom: 20, fontWeight: 600, color: "#374151" }}>← Back</button>
           <div style={{ background: "white", borderRadius: 16, border: "1px solid #dcfce7", overflow: "hidden" }}>
             <div style={{ padding: 24, borderBottom: "1px solid #f0fdf4", display: "flex", gap: 20, alignItems: "center" }}>
               <span style={{ fontSize: 64 }}>{selected.image}</span>
