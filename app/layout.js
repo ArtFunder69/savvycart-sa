@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "SavvyCart SA - Compare Grocery Prices",
-  description: "Compare grocery prices across Checkers, Pick n Pay, Woolworths, Makro and more. Find the cheapest groceries in South Africa.",
+  description: "Compare grocery prices across Checkers, Pick n Pay, Woolworths, Makro and more.",
 };
 
 export default function RootLayout({ children }) {
@@ -32,7 +32,7 @@ export default function RootLayout({ children }) {
 }
 ```
 
-Save it, then run in your terminal:
+Press `Cmd+S` to save, then back in terminal:
 ```
 git add .
 git commit -m "Add AdSense verification and update metadata"
