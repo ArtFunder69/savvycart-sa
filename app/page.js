@@ -105,6 +105,7 @@ export default function Home() {
               {l} {p === "basket" && basket.length > 0 && `(${basket.length})`}
             </button>
           ))}
+          <a href="/about" style={{ padding: "6px 14px", borderRadius: 8, textDecoration: "none", color: "#4b5563", fontWeight: 600 }}>About</a>
         </div>
       </nav>
 
@@ -349,9 +350,44 @@ export default function Home() {
       )}
 
       {/* FOOTER */}
-      <footer style={{ background: "#14532d", color: "#bbf7d0", padding: "24px", textAlign: "center", fontSize: 13, marginTop: 60 }}>
-        <div style={{ fontWeight: 700, fontSize: 16, color: "white", marginBottom: 6 }}>🛒 SavvyCart SA</div>
-        <div>Helping South Africans save money, one grocery at a time</div>
+      <footer style={{ background: "#14532d", color: "#bbf7d0", padding: "40px 24px", marginTop: 60 }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 24, marginBottom: 32 }}>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 20, color: "white", marginBottom: 8 }}>🛒 SavvyCart SA</div>
+              <div style={{ fontSize: 14, maxWidth: 300 }}>South Africa's grocery price comparison platform. Helping South Africans save money every day.</div>
+            </div>
+            <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontWeight: 700, color: "white", marginBottom: 12 }}>Platform</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14 }}>
+                  <a href="/" style={{ color: "#bbf7d0", textDecoration: "none" }}>Home</a>
+                  <a href="/about" style={{ color: "#bbf7d0", textDecoration: "none" }}>About Us</a>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: "white", marginBottom: 12 }}>Retailers</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14 }}>
+                  <span>Takealot</span>
+                  <span>Checkers</span>
+                  <span>Pick n Pay</span>
+                  <span>Makro</span>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: "white", marginBottom: 12 }}>Legal</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14 }}>
+                  <a href="/privacy" style={{ color: "#bbf7d0", textDecoration: "none" }}>Privacy Policy</a>
+                  <a href="/about" style={{ color: "#bbf7d0", textDecoration: "none" }}>Contact Us</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid #166534", paddingTop: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 13 }}>
+            <span>© 2026 SavvyCart SA. All rights reserved.</span>
+            <span>Prices updated daily · Not affiliated with any retailer</span>
+          </div>
+        </div>
       </footer>
 
     </div>
